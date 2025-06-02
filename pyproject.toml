@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "superedit"
+version = "0.1.0"
+description = "Edit videos with AI"
+authors = ["Philip Wee <philip.andrewweedewang@gmail.com>"]
+readme = "README.md"
+packages = [{include = "superedit"}]
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+python-dotenv = "^1.1.0"
+google-genai = "^1.18.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
