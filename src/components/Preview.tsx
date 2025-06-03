@@ -3,23 +3,30 @@ import { useEditorStore } from '../store/editorStore';
 
 export const Preview: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { currentTime, isPlaying, clips } = useEditorStore();
+  const { currentTime, isPlaying, clips, setCurrentTime } = useEditorStore();
 
+  // Handle play/pause state
   useEffect(() => {
     if (videoRef.current) {
       if (isPlaying) {
-        videoRef.current.play();
+        videoRef.current.currentTime = currentTime;
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Playback failed:", error);
+          });
+        }
       } else {
         videoRef.current.pause();
       }
     }
-  }, [isPlaying]);
+  }, [isPlaying, currentTime]);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = currentTime;
-    }
-  }, [currentTime]);
+  // Keep the store's currentTime in sync with video playback
+  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    setCurrentTime(video.currentTime);
+  };
 
   const currentVideoClip = clips.find(
     clip => clip.type === 'video' && 
@@ -34,11 +41,9 @@ export const Preview: React.FC = () => {
           ref={videoRef}
           src={URL.createObjectURL(currentVideoClip.file)}
           className="w-full h-full object-contain"
-          onTimeUpdate={(e) => {
-            const video = e.currentTarget;
-            if (video.currentTime >= currentVideoClip.endTime) {
-              video.pause();
-            }
+          onTimeUpdate={handleTimeUpdate}
+          onEnded={() => {
+            setCurrentTime(currentVideoClip.position + currentVideoClip.duration);
           }}
         />
       ) : (

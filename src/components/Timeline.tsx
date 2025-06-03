@@ -1,7 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 import { useEditorStore } from '../store/editorStore';
-import { animate } from '@motionone/dom';
-import type { AnimationOptionsWithOverrides } from '@motionone/dom';
 
 interface TimelineProps {
   width: number;
@@ -15,15 +13,31 @@ export const Timeline: React.FC<TimelineProps> = ({ width }) => {
   const timelineContainerRef = useRef<HTMLDivElement>(null);
   const rulerRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll timeline during playback
   useEffect(() => {
     const parentEl = timelineContainerRef.current;
-    if (isPlaying && parentEl) {
-      const targetScroll = currentTime * PIXELS_PER_SECOND - parentEl.offsetWidth / 2;
-      animate(
-        parentEl,
-        { transform: `translateX(${-Math.max(0, targetScroll)}px)` },
-        { duration: 0.1, easing: 'linear' } as AnimationOptionsWithOverrides
-      );
+    if (!parentEl) return;
+
+    const updateScroll = () => {
+      const currentPixelPosition = currentTime * PIXELS_PER_SECOND;
+      const containerWidth = parentEl.offsetWidth;
+      const scrollPosition = parentEl.scrollLeft;
+      const margin = containerWidth * 0.2; // 20% margin
+
+      // Check if playhead is getting close to the edge of the visible area
+      if (currentPixelPosition < scrollPosition + margin || 
+          currentPixelPosition > scrollPosition + containerWidth - margin) {
+        // Center the playhead
+        const targetScroll = Math.max(0, currentPixelPosition - containerWidth / 2);
+        parentEl.scrollTo({
+          left: targetScroll,
+          behavior: 'smooth'
+        });
+      }
+    };
+
+    if (isPlaying) {
+      updateScroll();
     }
   }, [currentTime, isPlaying]);
 
@@ -147,6 +161,9 @@ export const Timeline: React.FC<TimelineProps> = ({ width }) => {
             >
               <div className="absolute -top-1 -translate-x-1/2 w-2 h-2 bg-red-500 rotate-45" />
               <div className="absolute top-0 bottom-0 w-px bg-red-500" />
+              <div className="absolute -bottom-4 -translate-x-1/2 bg-black/80 text-white px-1.5 py-0.5 rounded text-xs whitespace-nowrap">
+                {formatTime(currentTime)}
+              </div>
             </div>
           </div>
         </div>
