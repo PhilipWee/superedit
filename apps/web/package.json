@@ -12,7 +12,10 @@
   "dependencies": {
     "@repo/ui": "workspace:*",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "@motion-canvas/core": "^3.17.2",
+    "@motion-canvas/2d": "^3.17.2",
+    "@motion-canvas/ffmpeg": "^1.1.0"
   },
   "devDependencies": {
     "tailwindcss": "^4.1.5",
