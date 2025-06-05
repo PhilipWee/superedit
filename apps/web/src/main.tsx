@@ -4,6 +4,7 @@ import typescriptLogo from "/typescript.svg";
 import { Player } from "@remotion/player";
 import { Header, Counter } from "@repo/ui";
 import { MyVideo } from './MyVideo';
+import { FileUpload } from './components/FileUpload';
 import "./styles.css";
 
 const App = () => (
@@ -17,6 +18,7 @@ const App = () => (
       controls
       autoPlay
     />
+    <FileUpload />
     <a href="https://vitejs.dev" target="_blank">
       <img src="/vite.svg" className="logo" alt="Vite logo" />
     </a>
