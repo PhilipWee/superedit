@@ -1,11 +1,22 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import typescriptLogo from "/typescript.svg";
+import { Player } from "@remotion/player";
 import { Header, Counter } from "@repo/ui";
-import "./styles.css"
+import { MyVideo } from './MyVideo';
+import "./styles.css";
 
 const App = () => (
   <div className="h-screen w-screen bg-red-100">
+    <Player
+      component={MyVideo}
+      durationInFrames={90}
+      compositionWidth={1280}
+      compositionHeight={720}
+      fps={30}
+      controls
+      autoPlay
+    />
     <a href="https://vitejs.dev" target="_blank">
       <img src="/vite.svg" className="logo" alt="Vite logo" />
     </a>
