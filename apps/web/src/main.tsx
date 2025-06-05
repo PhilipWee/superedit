@@ -2,13 +2,12 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import typescriptLogo from "/typescript.svg";
 import { Header, Counter } from "@repo/ui";
-import { createRef } from "@motion-canvas/core";
+import { Player, createRef, Project, makeProject } from "@motion-canvas/core";
 import { Circle, makeScene2D, Video } from "@motion-canvas/2d";
 import "./styles.css";
 
 const video = makeScene2D(function* (view) {
   const circle = createRef<Circle>();
-  const videoRef = createRef<Video>();
 
   const circleNode = new Circle({
     x: -700,
@@ -33,6 +32,12 @@ const video = makeScene2D(function* (view) {
 
   yield* circle().scale(2, 2).to(1, 2);
 });
+
+const project = makeProject({
+  scenes: [video],
+});
+
+const player = new Player(project);
 
 const App = () => {
   console.log(video);
