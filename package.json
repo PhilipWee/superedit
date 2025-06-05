@@ -9,6 +9,7 @@
   "devDependencies": {
     "eslint": "^9.28.0",
     "prettier": "^3.2.5",
+    "supabase": "^2.24.3",
     "turbo": "^2.5.4"
   },
   "packageManager": "pnpm@8.15.6",
