@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { useMediaStore } from '../store/mediaStore';
+import { MediaClips } from './MediaClips';
+import { analyzeVideoWithGemini } from '../services/geminiService';
 
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -27,6 +30,8 @@ interface StorageFile {
 export const FileUpload: React.FC = () => {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [analyzing, setAnalyzing] = useState<Record<string, boolean>>({});
+  const { addMedia, removeMedia, addSegment, updateAiProcessed } = useMediaStore();
 
   // Fetch existing files on component mount
   useEffect(() => {
@@ -51,13 +56,18 @@ export const FileUpload: React.FC = () => {
           .from('uploads')
           .getPublicUrl(file.name);
 
-        return {
+        const fileItem = {
           id: file.id,
           name: file.name,
           url: publicUrl,
           type: file.metadata?.mimetype || 'unknown',
           created_at: file.created_at,
         };
+
+        // Add to media store
+        addMedia(fileItem);
+
+        return fileItem;
       })
     );
 
@@ -83,7 +93,7 @@ export const FileUpload: React.FC = () => {
 
     await fetchFiles();
     setUploading(false);
-  }, []);
+  }, [addMedia]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -94,18 +104,54 @@ export const FileUpload: React.FC = () => {
     }
   });
 
-  const removeFile = async (fileName: string) => {
+  const removeFile = async (file: FileItem) => {
     const { error } = await supabase
       .storage
       .from('uploads')
-      .remove([fileName]);
+      .remove([file.name]);
 
     if (error) {
       console.error('Error removing file:', error);
       return;
     }
 
+    removeMedia(file.id);
     await fetchFiles();
+  };
+
+  const handleAnalyzeVideo = async (file: FileItem) => {
+    if (!file.type.startsWith('video/')) {
+      alert('AI analysis is only available for video files');
+      return;
+    }
+
+    setAnalyzing(prev => ({ ...prev, [file.id]: true }));
+
+    try {
+      // Fetch the video file from the URL
+      const response = await fetch(file.url);
+      const blob = await response.blob();
+      const videoFile = new File([blob], file.name, { type: file.type });
+
+      // Analyze with Gemini
+      const segments = await analyzeVideoWithGemini(videoFile);
+
+      // Add segments to the store
+      segments.forEach(segment => {
+        addSegment(file.id, {
+          ...segment,
+          aiGenerated: true
+        });
+      });
+
+      // Mark as AI processed
+      updateAiProcessed(file.id, true);
+    } catch (error) {
+      console.error('Error analyzing video:', error);
+      alert('Failed to analyze video. Please try again.');
+    } finally {
+      setAnalyzing(prev => ({ ...prev, [file.id]: false }));
+    }
   };
 
   return (
@@ -130,40 +176,61 @@ export const FileUpload: React.FC = () => {
         )}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="mt-8 grid grid-cols-1 gap-6">
         {files.map((file) => (
           <div
             key={file.id}
             className="border rounded-lg p-4 shadow-sm"
           >
-            {file.type.startsWith('image/') ? (
-              <img
-                src={file.url}
-                alt={file.name}
-                className="w-full h-40 object-cover rounded-md"
-              />
-            ) : file.type.startsWith('video/') ? (
-              <video
-                src={file.url}
-                controls
-                className="w-full h-40 object-cover rounded-md"
-              />
-            ) : file.type.startsWith('audio/') ? (
-              <audio
-                src={file.url}
-                controls
-                className="w-full mt-2"
-              />
-            ) : null}
-            
-            <div className="mt-2">
-              <p className="text-sm font-medium truncate">{file.name}</p>
-              <button
-                onClick={() => removeFile(file.name)}
-                className="mt-2 text-red-500 text-sm hover:text-red-700"
-              >
-                Remove
-              </button>
+            <div className="flex gap-4">
+              <div className="w-96">
+                {file.type.startsWith('image/') ? (
+                  <img
+                    src={file.url}
+                    alt={file.name}
+                    className="w-full h-40 object-cover rounded-md"
+                  />
+                ) : file.type.startsWith('video/') ? (
+                  <>
+                    <video
+                      src={file.url}
+                      controls
+                      className="w-full h-40 object-cover rounded-md"
+                    />
+                    <button
+                      onClick={() => handleAnalyzeVideo(file)}
+                      disabled={analyzing[file.id]}
+                      className={`mt-2 w-full px-3 py-1 rounded ${
+                        analyzing[file.id]
+                          ? 'bg-gray-300 cursor-not-allowed'
+                          : 'bg-purple-500 text-white hover:bg-purple-600'
+                      }`}
+                    >
+                      {analyzing[file.id] ? 'Analyzing...' : 'Analyze with AI'}
+                    </button>
+                  </>
+                ) : file.type.startsWith('audio/') ? (
+                  <audio
+                    src={file.url}
+                    controls
+                    className="w-full mt-2"
+                  />
+                ) : null}
+                
+                <div className="mt-2">
+                  <p className="text-sm font-medium truncate">{file.name}</p>
+                  <button
+                    onClick={() => removeFile(file)}
+                    className="mt-2 text-red-500 text-sm hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1">
+                <MediaClips mediaId={file.id} />
+              </div>
             </div>
           </div>
         ))}
