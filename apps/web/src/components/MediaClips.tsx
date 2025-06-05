@@ -54,59 +54,58 @@ export const MediaClips: React.FC<MediaClipsProps> = ({ mediaId }) => {
   };
 
   return (
-    <div className="mt-4">
-      <h3 className="text-lg font-semibold mb-2">Clips</h3>
-      
+    <div className="space-y-2">
       {/* Add new segment form */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-1 items-center text-sm">
         <input
           type="text"
           placeholder="00:00"
           value={newSegment.startTime}
           onChange={(e) => setNewSegment(prev => ({ ...prev, startTime: e.target.value }))}
-          className="border rounded px-2 py-1 w-20"
+          className="border rounded px-1 py-0.5 w-14 text-xs"
         />
+        <span className="text-gray-500">-</span>
         <input
           type="text"
           placeholder="00:00"
           value={newSegment.endTime}
           onChange={(e) => setNewSegment(prev => ({ ...prev, endTime: e.target.value }))}
-          className="border rounded px-2 py-1 w-20"
+          className="border rounded px-1 py-0.5 w-14 text-xs"
         />
         <input
           type="text"
           placeholder="Description"
           value={newSegment.label}
           onChange={(e) => setNewSegment(prev => ({ ...prev, label: e.target.value }))}
-          className="border rounded px-2 py-1 flex-1"
+          className="border rounded px-1 py-0.5 flex-1 text-xs"
         />
         <button
           onClick={handleAddSegment}
-          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+          className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs hover:bg-blue-600"
         >
           Add
         </button>
       </div>
 
       {/* Segments list */}
-      <div className="space-y-2">
+      <div className="space-y-1 max-h-32 overflow-y-auto">
         {media.segments.map((segment, index) => (
           <div
             key={index}
-            className={`p-2 rounded border ${segment.aiGenerated ? 'bg-purple-50' : 'bg-gray-50'}`}
+            className={`p-1.5 rounded border text-xs ${segment.aiGenerated ? 'bg-purple-50' : 'bg-gray-50'}`}
           >
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">
+            <div className="flex justify-between items-center gap-1">
+              <span className="font-medium whitespace-nowrap">
                 {formatTime(segment.startTime)} - {formatTime(segment.endTime)}
               </span>
+              <span className="flex-1 truncate px-1">{segment.label}</span>
               <button
                 onClick={() => removeSegment(mediaId, index)}
-                className="text-red-500 hover:text-red-700"
+                className="text-red-500 hover:text-red-700 px-1"
               >
                 ×
               </button>
             </div>
-            <p className="text-sm mt-1">{segment.label}</p>
           </div>
         ))}
       </div>

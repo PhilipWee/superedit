@@ -155,80 +155,79 @@ export const FileUpload: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
+    <div className="h-full flex flex-col">
+      {/* Drop zone - takes minimal space */}
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+        className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors mb-4 ${
           isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500'
         }`}
       >
         <input {...getInputProps()} />
         {uploading ? (
-          <p className="text-gray-600">Uploading files...</p>
+          <p className="text-sm text-gray-600">Uploading files...</p>
         ) : isDragActive ? (
-          <p className="text-blue-500">Drop the files here...</p>
+          <p className="text-sm text-blue-500">Drop the files here...</p>
         ) : (
-          <p className="text-gray-600">
+          <p className="text-sm text-gray-600">
             Drag and drop files here, or click to select files
             <br />
-            <span className="text-sm">(Images, Videos, and Audio files are accepted)</span>
+            <span className="text-xs">(Images, Videos, and Audio files)</span>
           </p>
         )}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6">
+      {/* Scrollable file list */}
+      <div className="flex-1 overflow-y-auto space-y-3">
         {files.map((file) => (
           <div
             key={file.id}
-            className="border rounded-lg p-4 shadow-sm"
+            className="border rounded-lg p-3 shadow-sm bg-white"
           >
-            <div className="flex gap-4">
-              <div className="w-96">
+            <div className="flex gap-3">
+              <div className="w-32 flex-shrink-0">
                 {file.type.startsWith('image/') ? (
                   <img
                     src={file.url}
                     alt={file.name}
-                    className="w-full h-40 object-cover rounded-md"
+                    className="w-full h-20 object-cover rounded-md"
                   />
                 ) : file.type.startsWith('video/') ? (
-                  <>
-                    <video
-                      src={file.url}
-                      controls
-                      className="w-full h-40 object-cover rounded-md"
-                    />
-                    <button
-                      onClick={() => handleAnalyzeVideo(file)}
-                      disabled={analyzing[file.id]}
-                      className={`mt-2 w-full px-3 py-1 rounded ${
-                        analyzing[file.id]
-                          ? 'bg-gray-300 cursor-not-allowed'
-                          : 'bg-purple-500 text-white hover:bg-purple-600'
-                      }`}
-                    >
-                      {analyzing[file.id] ? 'Analyzing...' : 'Analyze with AI'}
-                    </button>
-                  </>
-                ) : file.type.startsWith('audio/') ? (
-                  <audio
+                  <video
                     src={file.url}
-                    controls
-                    className="w-full mt-2"
+                    className="w-full h-20 object-cover rounded-md"
                   />
+                ) : file.type.startsWith('audio/') ? (
+                  <div className="w-full h-20 bg-gray-100 rounded-md flex items-center justify-center">
+                    <span className="text-2xl">🎵</span>
+                  </div>
                 ) : null}
                 
                 <div className="mt-2">
-                  <p className="text-sm font-medium truncate">{file.name}</p>
+                  <p className="text-xs font-medium truncate">{file.name}</p>
                   <button
                     onClick={() => removeFile(file)}
-                    className="mt-2 text-red-500 text-sm hover:text-red-700"
+                    className="text-xs text-red-500 hover:text-red-700"
                   >
                     Remove
                   </button>
                 </div>
               </div>
 
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
+                {file.type.startsWith('video/') && (
+                  <button
+                    onClick={() => handleAnalyzeVideo(file)}
+                    disabled={analyzing[file.id]}
+                    className={`w-full px-2 py-1 rounded text-sm mb-2 ${
+                      analyzing[file.id]
+                        ? 'bg-gray-300 cursor-not-allowed'
+                        : 'bg-purple-500 text-white hover:bg-purple-600'
+                    }`}
+                  >
+                    {analyzing[file.id] ? 'Analyzing...' : 'Analyze with AI'}
+                  </button>
+                )}
                 <MediaClips mediaId={file.id} />
               </div>
             </div>
